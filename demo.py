@@ -62,6 +62,28 @@ def downsample(buf, outrate=16000):
     return outbuf
 
 
+def get_voice_events(filename, frame_dur, aggressiveness):
+    """Evaluate the file for voice events.
+
+    :param str filename:
+    :param int frame_dur:
+    :param int aggressiveness:
+
+    """
+    assert frame_dur in [10, 20, 30]
+    assert aggressiveness in range(4)
+
+    vad = Vad()
+    vad.set_mode(args.aggressiveness)
+    sample_rate = 16000
+    frame_dur = args.frame_duration
+
+    clip = downsample(filename, sample_rate).read()
+    return [
+        (frame_dur*n, vad.is_speech(frame.bytes, sample_rate))
+        for n, frame in enumerate(frame_generator(clip, frame_dur, sample_rate))
+    ]
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-d", "--frame-duration", default=20, type=int,
@@ -70,16 +92,7 @@ if __name__ == "__main__":
                         help="Voice detection aggressiveness")
     args = parser.parse_args()
 
-    assert args.frame_duration in [10, 20, 30]
-    assert args.aggressiveness in range(4)
-
-    vad = Vad()
-    vad.set_mode(args.aggressiveness)
-    sample_rate = 16000
-    frame_dur = args.frame_duration
-
     for filename in ["noise.wav", "speech.wav", "sfx.wav"]:
         print("Checking", filename)
-        clip = downsample(filename, sample_rate).read()
-        for n, frame in enumerate(frame_generator(clip, frame_dur, sample_rate)):
-            print(frame_dur*n, "ms:", vad.is_speech(frame.bytes, sample_rate))
+        events = get_voice_events(filename, args.frame_duration, args.aggressiveness)
+        print(events)
