@@ -67,6 +67,8 @@ if __name__ == "__main__":
     sample_rate = 16000
     frame_dur = 20
 
-    clip = downsample("speech.wav", sample_rate).read()
-    for n, frame in enumerate(frame_generator(clip, frame_dur, sample_rate)):
-        print(frame_dur*n, "ms:", vad.is_speech(frame.bytes, sample_rate))
+    for filename in ["noise.wav", "speech.wav", "sfx.wav"]:
+        print("Checking", filename)
+        clip = downsample(filename, sample_rate).read()
+        for n, frame in enumerate(frame_generator(clip, frame_dur, sample_rate)):
+            print(frame_dur*n, "ms:", vad.is_speech(frame.bytes, sample_rate))
