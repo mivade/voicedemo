@@ -2,6 +2,7 @@ from io import BytesIO
 from collections import namedtuple
 import wave
 import audioop
+from argparse import ArgumentParser
 from webrtcvad import Vad
 
 AudioFrame = namedtuple("AudioFrame", "bytes, timestamp, duration")
@@ -62,10 +63,20 @@ def downsample(buf, outrate=16000):
 
 
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("-d", "--frame-duration", default=20, type=int,
+                        help="Frame length in ms")
+    parser.add_argument("-a", "--aggressiveness", default=1, type=int,
+                        help="Voice detection aggressiveness")
+    args = parser.parse_args()
+
+    assert args.frame_duration in [10, 20, 30]
+    assert args.aggressiveness in range(4)
+
     vad = Vad()
-    vad.set_mode(1)
+    vad.set_mode(args.aggressiveness)
     sample_rate = 16000
-    frame_dur = 20
+    frame_dur = args.frame_duration
 
     for filename in ["noise.wav", "speech.wav", "sfx.wav"]:
         print("Checking", filename)
